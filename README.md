@@ -19,4 +19,4 @@ Features:
 
   Webhook Response – Returns a full HTML page ready for your dashboard or iframe.
 
-I have three files that basically show how i refined the workflow from my original idea.
+I have three files that basically show how i refined the workflow from my original idea: OG was my first rough draft, if you may, revised came after that, and the FINAL json file is the one I ended up with.
