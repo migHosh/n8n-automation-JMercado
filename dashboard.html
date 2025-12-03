@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Threat Analyzer | SOC Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #334155;
+        }
+
+        h2 { margin-top: 0; color: var(--accent); border-bottom: 2px solid #334155; padding-bottom: 10px; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.9em; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        textarea { height: 100px; resize: vertical; font-family: 'Courier New', monospace; font-size: 0.9em; }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #2563eb; }
+        button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+
+        #resultPanel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #reportFrame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status-text { text-align: center; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- INPUT SIDE -->
+    <div class="panel">
+        <h2>📥 Email Ingestion</h2>
+        <div class="form-group">
+            <label>Sender Address</label>
+            <input type="text" id="sender" value="security-update@goggle-accounts.com">
+        </div>
+        <div class="form-group">
+            <label>Subject Line</label>
+            <input type="text" id="subject" value="URGENT: Action Required on your Account">
+        </div>
+        <div class="form-group">
+            <label>Email Headers (Raw Metadata)</label>
+            <textarea id="headers" placeholder="Paste raw headers here (Received-SPF, DKIM, etc)...">Received: from mail.goggle-accounts.com (192.168.1.1)
+DKIM-Signature: v=1; a=rsa-sha256; d=goggle.com;
+X-Originating-IP: [10.0.0.55]</textarea>
+        </div>
+        <div class="form-group">
+            <label>Email Body</label>
+            <textarea id="body" style="height: 120px;">Dear User, 
+Your password has expired. Please click here immediately to restore access or your account will be locked within 24 hours.
+            
+Sincerely,
+Admin Team</textarea>
+        </div>
+        <button onclick="analyzeEmail()" id="analyzeBtn">Analyze Threat</button>
+        <p style="font-size: 12px; color: #64748b; margin-top: 10px;">
+            *Ensure n8n "Listen for Test Event" is active before clicking.
+        </p>
+    </div>
+
+    <!-- OUTPUT SIDE -->
+    <div class="panel" id="resultPanel">
+        <h2>🛡️ Live Analysis Report</h2>
+        <div class="loader" id="loader"></div>
+        <p class="status-text" id="statusText">Waiting for submission...</p>
+        <iframe id="reportFrame"></iframe>
+    </div>
+</div>
+
+<script>
+    async function analyzeEmail() {
+        // --- CONFIGURATION ---
+        // REPLACE THIS URL WITH YOUR N8N WEBHOOK URL
+        const webhookUrl = "http://localhost:5678/webhook-test/87d8ef97-3fd6-4697-9670-afd0810e6f95"; 
+        // ---------------------
+
+        const btn = document.getElementById('analyzeBtn');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('statusText');
+        const frame = document.getElementById('reportFrame');
+
+        // UI Reset
+        btn.disabled = true;
+        btn.innerText = "Processing AI Chains...";
+        loader.style.display = "block";
+        frame.style.display = "none";
+        status.innerText = "Orchestrating: Perplexity -> Ollama -> Gemini...";
+
+        const payload = {
+            sender: document.getElementById('sender').value,
+            subject: document.getElementById('subject').value,
+            headers: document.getElementById('headers').value,
+            body: document.getElementById('body').value
+        };
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(`Server returned ${response.status} ${response.statusText}`);
+
+            // n8n returns the HTML string directly (or JSON containing it)
+            const htmlContent = await response.text();
+            
+            // Render into iframe
+            const doc = frame.contentWindow.document;
+            doc.open();
+            doc.write(htmlContent);
+            doc.close();
+
+            status.style.display = "none";
+            frame.style.display = "block";
+
+        } catch (error) {
+            // ENHANCED ERROR LOGGING
+            console.error(error);
+            status.innerHTML = `
+                <span style="color: #ef4444; font-weight: bold;">Connection Failed!</span><br>
+                <span style="font-size: 0.9em;">${error.message}</span>
+                <br><br>
+                <div style="text-align: left; background: #334155; padding: 10px; border-radius: 6px; font-size: 0.85em;">
+                    <strong>Try these fixes:</strong>
+                    <ul style="margin: 5px 0 0 20px; padding: 0;">
+                        <li>Is the n8n <strong>"Listen for Test Event"</strong> button spinning?</li>
+                        <li>Did you add the <strong>Response Headers</strong> in n8n? <br>(Access-Control-Allow-Origin: *)</li>
+                        <li>Check the Console (F12) for CORS errors.</li>
+                    </ul>
+                </div>
+            `;
+        } finally {
+            loader.style.display = "none";
+            btn.disabled = false;
+            btn.innerText = "Analyze Threat";
+        }
+    }
+</script>
+
+</body>
+</html>
