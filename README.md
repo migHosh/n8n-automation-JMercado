@@ -23,3 +23,4 @@ Features:
 
   Webhook Response – Returns a full HTML page ready for your dashboard or iframe.
 
+goodbad.txt has 2 emails you can use to test out the program. One will yield a good result, and the other will be dangerous.
