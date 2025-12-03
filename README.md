@@ -1,6 +1,7 @@
 Phishing Email Detection
 
 This project is an automated email-security workflow built in n8n, combining local AI, cloud AI, an AI Agent, and a Gemini image generator to create a fully styled phishing-assessment report, complete with a 2010s Swag-Era meme.
+I have provided three files that basically show how I refined the workflow from my original idea: OG was my first rough draft, Revised came after that, and the FINAL json file is the one I ended up with.
 
 Features:
   Dashboard - vibe-coded using AI-assisted development, allowing rapid iteration of layout, styling, and user experience.
@@ -21,6 +22,3 @@ Features:
 
   Webhook Response – Returns a full HTML page ready for your dashboard or iframe.
 
-  The HTML coding was vibe
-
-I have three files that basically show how I refined the workflow from my original idea: OG was my first rough draft, Revised came after that, and the FINAL json file is the one I ended up with.
